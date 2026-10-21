@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.blazartech</groupId>
     <artifactId>blazarjavaparent</artifactId>
-    <version>1.28-RELEASE</version>
+    <version>1.29-RELEASE</version>
     <packaging>pom</packaging>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -110,7 +110,7 @@
                         <configuration>
                             <rules>
                                 <requireMavenVersion>
-                                    <version>3.6.3</version>
+                                    <version>[3.6.3,5.0.0)</version>
                                 </requireMavenVersion>
                                 <requireJavaVersion>
                                     <version>25</version>
@@ -121,12 +121,30 @@
                 </executions>
             </plugin>
             
+            <!-- 1. Dynamically locate the Mockito JAR path -->
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <configuration>
-                    <argLine>-Xshare:off -javaagent:"${settings.localRepository}/org/mockito/mockito-core/${mockito.version}/mockito-core-${mockito.version}.jar"</argLine>
-                </configuration>
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-dependency-plugin</artifactId>
+              <version>3.11.0</version>
+              <executions>
+                <execution>
+                  <id>locate-mockito-agent</id>
+                  <phase>initialize</phase>
+                  <goals>
+                    <goal>properties</goal>
+                  </goals>
+                </execution>
+              </executions>
+            </plugin>
+            
+            <!-- 2. Safely apply the javaagent argument -->
+            <plugin>
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-surefire-plugin</artifactId>
+              <configuration>
+                <!-- @{} syntax allows late evaluation of the property generated above -->
+                <argLine>-Xshare:off -javaagent:"@{org.mockito:mockito-core:jar}"</argLine>
+              </configuration>
             </plugin>
             
             <plugin>
